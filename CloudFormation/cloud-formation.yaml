@@ -1,0 +1,475 @@
+Resources:
+  VideoStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: quiz-master-video-storage
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - POST
+              - DELETE
+            AllowedOrigins:
+              - "*"
+
+  AnswerAccuracyQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: answer-accuracy-queue
+
+  FaceAnalysisQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: face-analysis-queue
+
+  MailQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: mail-queue
+
+  ResultQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: result-queue
+
+  TranscribeRequestQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: transcribe-request-queue
+
+  TranscribeResponseQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: transcribe-response-queue
+
+  QuizMasterVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: QuizMasterVPC
+
+  QuizMasterInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: QuizMasterInternetGateway
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: QuizMasterVPC
+      InternetGatewayId:
+        Ref: QuizMasterInternetGateway
+  
+  PublicQuizMasterSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref QuizMasterVPC
+      CidrBlock: "10.0.1.0/24"
+      AvailabilityZone: "us-east-1a"
+      Tags:
+        - Key: Name
+          Value: PublicQuizMasterSubnet1
+
+  PublicQuizMasterSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref QuizMasterVPC
+      CidrBlock: "10.0.2.0/24"
+      AvailabilityZone: "us-east-1b"
+      Tags:
+        - Key: Name
+          Value: PublicQuizMasterSubnet2
+
+  PrivateQuizMasterSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref QuizMasterVPC
+      CidrBlock: "10.0.3.0/24"
+      AvailabilityZone: "us-east-1c"
+      Tags:
+        - Key: Name
+          Value: PrivateQuizMasterSubnet1
+
+  PrivateQuizMasterSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref QuizMasterVPC
+      CidrBlock: "10.0.4.0/24"
+      AvailabilityZone: "us-east-1d"
+      Tags:
+        - Key: Name
+          Value: PrivateQuizMasterSubnet2
+
+  ECSPrivateQuizMasterSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref QuizMasterVPC
+      CidrBlock: "10.0.5.0/24"
+      AvailabilityZone: "us-east-1e"
+      Tags:
+        - Key: Name
+          Value: ECSPrivateQuizMasterSubnet1
+
+  ECSPrivateQuizMasterSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref QuizMasterVPC
+      CidrBlock: "10.0.6.0/24"
+      AvailabilityZone: "us-east-1f"
+      Tags:
+        - Key: Name
+          Value: ECSPrivateQuizMasterSubnet2
+
+  QuizMasterElasticIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: QuizMasterElasticIP
+
+  QuizMasterNATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt QuizMasterElasticIP.AllocationId
+      SubnetId: !Ref PublicQuizMasterSubnet1
+      Tags:
+        - Key: Name
+          Value: QuizMasterNATGateway
+
+  PublicQuizMasterRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref QuizMasterVPC
+      Tags:
+        - Key: Name
+          Value: PublicQuizMasterRouteTable
+
+  PublicQuizMasterRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicQuizMasterRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref QuizMasterInternetGateway
+
+  PrivateQuizMasterRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref QuizMasterVPC
+      Tags:
+        - Key: Name
+          Value: PrivateQuizMasterRouteTable
+
+  ECSPrivateQuizMasterRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref QuizMasterVPC
+      Tags:
+        - Key: Name
+          Value: ECSPrivateQuizMasterRouteTable
+
+  ECSPrivateQuizMasterRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref ECSPrivateQuizMasterRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      NatGatewayId: !Ref QuizMasterNATGateway
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicQuizMasterSubnet1
+      RouteTableId: !Ref PublicQuizMasterRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicQuizMasterSubnet2
+      RouteTableId: !Ref PublicQuizMasterRouteTable
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateQuizMasterSubnet1
+      RouteTableId: !Ref PrivateQuizMasterRouteTable
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateQuizMasterSubnet2
+      RouteTableId: !Ref PrivateQuizMasterRouteTable
+
+  ECSPrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ECSPrivateQuizMasterSubnet1
+      RouteTableId: !Ref ECSPrivateQuizMasterRouteTable
+
+  ECSPrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref ECSPrivateQuizMasterSubnet2
+      RouteTableId: !Ref ECSPrivateQuizMasterRouteTable
+
+  RDSPrivateSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: RDSPrivateSubnetGroup
+      DBSubnetGroupDescription: Private subnets for RDS
+      SubnetIds:
+        - !Ref PrivateQuizMasterSubnet1
+        - !Ref PrivateQuizMasterSubnet2
+
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for the QuizMaster load balancer
+      VpcId: !Ref QuizMasterVPC
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: LoadBalancerSecurityGroup
+
+  QuizPortalDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: quizportaldb
+      AllocatedStorage: 20
+      DBInstanceClass: db.t3.micro
+      Engine: mysql
+      DBName: quizportaldb
+      MasterUsername: admin
+      MasterUserPassword: quizportaldb
+      DBSubnetGroupName: !Ref RDSPrivateSubnetGroup
+      PubliclyAccessible: false
+      VPCSecurityGroups:
+      - !Ref LoadBalancerSecurityGroup
+      Tags:
+        - Key: Name
+          Value: quizportaldb
+
+  QuizMasterFrontendTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: QuizMasterFrontendTargetGroup
+      VpcId: !Ref QuizMasterVPC
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: "/"
+      HealthCheckProtocol: "HTTP"
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      Port: 80
+      Protocol: "HTTP"
+      TargetType: "ip"
+
+  QuizMasterLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    DependsOn: AttachGateway
+    Properties:
+      Name: QuizMasterLoadBalancer
+      Scheme: internet-facing
+      Subnets:
+        - !Ref PublicQuizMasterSubnet1
+        - !Ref PublicQuizMasterSubnet2
+        - !Ref ECSPrivateQuizMasterSubnet1
+        - !Ref ECSPrivateQuizMasterSubnet2
+      SecurityGroups:
+        - !Ref LoadBalancerSecurityGroup
+      Type: application
+
+  QuizMasterFrontendListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref QuizMasterFrontendTargetGroup
+      LoadBalancerArn: !Ref QuizMasterLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  QuizMasterRestAPITargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: QuizMasterRestAPITargetGroup
+      VpcId: !Ref QuizMasterVPC
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: "/api/Auth/status"
+      HealthCheckProtocol: "HTTP"
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 5
+      UnhealthyThresholdCount: 2
+      Port: 8080
+      Protocol: "HTTP"
+      TargetType: "ip"
+
+  QuizMasterRestAPIListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref QuizMasterRestAPITargetGroup
+      LoadBalancerArn: !Ref QuizMasterLoadBalancer
+      Port: 8080
+      Protocol: HTTP
+
+  QuizMasterCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: QuizMasterCluster
+
+  FrontendTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: FrontendDeployment
+      Cpu: "512"
+      Memory: "1024"
+      NetworkMode: awsvpc
+      TaskRoleArn: arn:aws:iam::851725625733:role/LabRole
+      ExecutionRoleArn: arn:aws:iam::851725625733:role/LabRole
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: frontend-container
+          Image: viveksonani/quiz-portal-frontend:latest
+          PortMappings:
+            - ContainerPort: 80
+              Protocol: tcp
+
+  FrontendService:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - QuizMasterFrontendListener
+      - QuizPortalDBInstance
+    Properties:
+      Cluster: !Ref QuizMasterCluster
+      ServiceName: FrontendService
+      TaskDefinition: !Ref FrontendTaskDefinition
+      LaunchType: "FARGATE"
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !Ref ECSPrivateQuizMasterSubnet1
+            - !Ref ECSPrivateQuizMasterSubnet2
+          SecurityGroups: 
+            - !Ref LoadBalancerSecurityGroup
+          AssignPublicIp: ENABLED
+      LoadBalancers:
+        - ContainerName: frontend-container
+          ContainerPort: 80
+          TargetGroupArn: !Ref QuizMasterFrontendTargetGroup
+
+  RestAPITaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: RestAPIDeployment
+      Cpu: "512"
+      Memory: "1024"
+      NetworkMode: awsvpc
+      TaskRoleArn: arn:aws:iam::851725625733:role/LabRole
+      ExecutionRoleArn: arn:aws:iam::851725625733:role/LabRole
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: rest-api-container
+          Image: viveksonani/quiz-portal-rest-api:latest
+          PortMappings:
+            - ContainerPort: 8080
+              Protocol: tcp
+
+  RestAPIService:
+    Type: AWS::ECS::Service
+    DependsOn:
+      - QuizMasterRestAPIListener
+      - QuizPortalDBInstance
+    Properties:
+      Cluster: !Ref QuizMasterCluster
+      ServiceName: RestAPIService
+      TaskDefinition: !Ref RestAPITaskDefinition
+      LaunchType: "FARGATE"
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !Ref ECSPrivateQuizMasterSubnet1
+            - !Ref ECSPrivateQuizMasterSubnet2
+          SecurityGroups: 
+            - !Ref LoadBalancerSecurityGroup
+          AssignPublicIp: ENABLED
+      LoadBalancers:
+        - ContainerName: rest-api-container
+          ContainerPort: 8080
+          TargetGroupArn: !Ref QuizMasterRestAPITargetGroup
+
+  ConsumerTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: ConsumerDeployment
+      Cpu: "512"
+      Memory: "1024"
+      NetworkMode: awsvpc
+      TaskRoleArn: arn:aws:iam::851725625733:role/LabRole
+      ExecutionRoleArn: arn:aws:iam::851725625733:role/LabRole
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: consumer-container
+          Image: viveksonani/quiz-portal-consumer:latest
+          PortMappings:
+            - ContainerPort: 80
+              Protocol: tcp
+
+  ConsumerService:
+    Type: AWS::ECS::Service
+    DependsOn:
+     - QuizPortalDBInstance
+    Properties:
+      Cluster: !Ref QuizMasterCluster
+      ServiceName: ConsumerService
+      TaskDefinition: !Ref ConsumerTaskDefinition
+      LaunchType: "FARGATE"
+      DesiredCount: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          Subnets:
+            - !Ref ECSPrivateQuizMasterSubnet1
+            - !Ref ECSPrivateQuizMasterSubnet2
+
+  TranscribeEC2Instance:
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - TranscribeRequestQueue
+      - TranscribeResponseQueue
+    Properties:
+      InstanceType: t2.nano
+      ImageId: ami-051f8a213df8bc089
+      KeyName: transcribe-ec2-key-pair
+      SubnetId: !Ref ECSPrivateQuizMasterSubnet1
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          sudo yum update -y
+          sudo yum install -y docker
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo usermod -a -G docker $(whoami)
+          sudo docker pull viveksonani/quiz-portal-transcribe:latest
+          sudo docker run -d viveksonani/quiz-portal-transcribe
+      Tags:
+        - Key: Name
+          Value: transcribe-ec2-instance
