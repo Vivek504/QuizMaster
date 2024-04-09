@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.16" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.16" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.3.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.16" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.16">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.16" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.7.300.59" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.1" />
+    <PackageReference Include="AWSSDK.Extensions.NETCore.Setup" Version="3.7.300" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Controllers\" />
+    <None Remove="DBModels\" />
+    <None Remove="Utility\" />
+    <None Remove="RequestModels\" />
+    <None Remove="ResponseModels\" />
+    <None Remove="Managers\" />
+    <None Remove="SQSModels\" />
+    <None Remove="IManagers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+    <Folder Include="DBModels\" />
+    <Folder Include="Utility\" />
+    <Folder Include="RequestModels\" />
+    <Folder Include="ResponseModels\" />
+    <Folder Include="Managers\" />
+    <Folder Include="SQSModels\" />
+    <Folder Include="IManagers\" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-QuizPortalConsumer-85f2c000-ae77-44e4-b59d-30363f83d006</UserSecretsId>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.7.301.8" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="AWSSDK.Rekognition" Version="3.7.301.23" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.16" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.16">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.16" />
+    <PackageReference Include="OpenAI" Version="1.11.0" />
+    <PackageReference Include="MailKit" Version="4.4.0" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.307.12" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\QuizPortal\QuizPortal.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Workflows\" />
+    <None Remove="Utility\" />
+    <None Remove="IManagers\" />
+    <None Remove="Managers\" />
+    <None Remove="RequestModels\" />
+    <None Remove="ResponseModels\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Workflows\" />
+    <Folder Include="Utility\" />
+    <Folder Include="IManagers\" />
+    <Folder Include="Managers\" />
+    <Folder Include="RequestModels\" />
+    <Folder Include="ResponseModels\" />
+  </ItemGroup>
+</Project>
