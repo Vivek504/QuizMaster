@@ -37,21 +37,6 @@
                     return;
                 }
 
-                if (video.StudentQuiz.Quiz.QuizType == QuizPortal.Utility.QuizTypeEnum.RECORDING)
-                {
-                    TranscribeRequestMessage transcribeRequestMessage = new TranscribeRequestMessage()
-                    {
-                        MessageType = QuizPortal.Utility.MessageTypeEnum.TRANSCRIBE_REQUEST,
-                        VideoId = video.Id,
-                        BucketName = _configuration[AppSettingsConstantsPath.S3BucketName],
-                        ObjectName = video.S3ObjectName,
-                        IsLastAnswer = video.IsLastVideo
-                    };
-                    string transcribeQueueUrl = await _sqsManager.GetQueueUrlAsync(_configuration[AppSettingsConstantsPath.TranscribeRequestQueueName]);
-
-                    _sqsManager.PublishToQueueAsync(transcribeQueueUrl, JsonConvert.SerializeObject(transcribeRequestMessage));
-                }
-
                 StudentResult studentResult = await _studentResultManager.GetByStudentQuizId(video.StudentQuiz.Id);
                 if (studentResult == null)
                 {
@@ -148,6 +133,21 @@
 
                     video.S3ObjectName = outputFileName;
                     await _videoManager.UpdateVideo(video);
+
+                    if (video.StudentQuiz.Quiz.QuizType == QuizPortal.Utility.QuizTypeEnum.RECORDING)
+                    {
+                        TranscribeRequestMessage transcribeRequestMessage = new TranscribeRequestMessage()
+                        {
+                            MessageType = QuizPortal.Utility.MessageTypeEnum.TRANSCRIBE_REQUEST,
+                            VideoId = video.Id,
+                            BucketName = _configuration[AppSettingsConstantsPath.S3BucketName],
+                            ObjectName = video.S3ObjectName,
+                            IsLastAnswer = video.IsLastVideo
+                        };
+                        string transcribeQueueUrl = await _sqsManager.GetQueueUrlAsync(_configuration[AppSettingsConstantsPath.TranscribeRequestQueueName]);
+
+                        _sqsManager.PublishToQueueAsync(transcribeQueueUrl, JsonConvert.SerializeObject(transcribeRequestMessage));
+                    }
 
                     var startFaceDetectionRequest = new StartFaceDetectionRequest
                     {
