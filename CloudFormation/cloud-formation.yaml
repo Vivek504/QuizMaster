@@ -336,8 +336,8 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: FrontendDeployment
-      Cpu: "512"
-      Memory: "1024"
+      Cpu: "2048"
+      Memory: "4096"
       NetworkMode: awsvpc
       TaskRoleArn: arn:aws:iam::851725625733:role/LabRole
       ExecutionRoleArn: arn:aws:iam::851725625733:role/LabRole
@@ -378,8 +378,8 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: RestAPIDeployment
-      Cpu: "512"
-      Memory: "1024"
+      Cpu: "2048"
+      Memory: "4096"
       NetworkMode: awsvpc
       TaskRoleArn: arn:aws:iam::851725625733:role/LabRole
       ExecutionRoleArn: arn:aws:iam::851725625733:role/LabRole
@@ -420,8 +420,8 @@ Resources:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: ConsumerDeployment
-      Cpu: "512"
-      Memory: "1024"
+      Cpu: "2048"
+      Memory: "4096"
       NetworkMode: awsvpc
       TaskRoleArn: arn:aws:iam::851725625733:role/LabRole
       ExecutionRoleArn: arn:aws:iam::851725625733:role/LabRole
@@ -456,10 +456,12 @@ Resources:
       - TranscribeRequestQueue
       - TranscribeResponseQueue
     Properties:
-      InstanceType: t2.nano
+      InstanceType: t2.micro
       ImageId: ami-051f8a213df8bc089
-      KeyName: transcribe-ec2-key-pair
       SubnetId: !Ref ECSPrivateQuizMasterSubnet1
+      KeyName: transcribe-ec2-key
+      SecurityGroupIds:
+        - !Ref LoadBalancerSecurityGroup
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash
