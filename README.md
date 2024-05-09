@@ -21,7 +21,7 @@
 
 ## Architecture
 
-![alt text](image.png)
+![alt text](Architecture.png)
 
 ## AWS Cloud Services
 
