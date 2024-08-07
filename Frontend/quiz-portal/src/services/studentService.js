@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const apiUrl = window.location.origin + `:${process.env.REACT_APP_BACKEND_PORT}/api`;
+const apiUrl = `${process.env.REACT_APP_BACKEND_URL}` + `:${process.env.REACT_APP_BACKEND_PORT}/api`;
 
 export const addStudent = async (token, email, courseId) => {
     try {

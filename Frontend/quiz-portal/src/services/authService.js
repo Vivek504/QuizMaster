@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const apiUrl = window.location.origin + `:${process.env.REACT_APP_BACKEND_PORT}/api`;
+const apiUrl = `${process.env.REACT_APP_BACKEND_URL}` + `:${process.env.REACT_APP_BACKEND_PORT}/api`;
 
 export const login = async (email, password) => {
     try {
@@ -53,7 +53,7 @@ export const forgotPassword = async (email) => {
             `${apiUrl}/Auth/forgotPassword`,
             {
                 email: email,
-                resetPasswordUrl: window.location.origin + "/reset-password"
+                resetPasswordUrl: `${window.location.origin}` + "/reset-password"
             },
             {
                 headers: {

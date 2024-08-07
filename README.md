@@ -27,7 +27,6 @@
 
 - AWS CloudFormation
 - Elastic Container Service (ECS)
-- EC2
 - Relational Database Service (RDS)
 - S3
 - Virtual Private Cloud (VPC)

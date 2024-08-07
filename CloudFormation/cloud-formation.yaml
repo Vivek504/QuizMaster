@@ -242,23 +242,36 @@ Resources:
         - Key: Name
           Value: LoadBalancerSecurityGroup
 
-  QuizPortalDBInstance:
-    Type: AWS::RDS::DBInstance
-    Properties:
-      DBInstanceIdentifier: quizportaldb
-      AllocatedStorage: 20
-      DBInstanceClass: db.t3.micro
-      Engine: mysql
-      DBName: quizportaldb
-      MasterUsername: admin
-      MasterUserPassword: quizportaldb
-      DBSubnetGroupName: !Ref RDSPrivateSubnetGroup
-      PubliclyAccessible: false
-      VPCSecurityGroups:
-      - !Ref LoadBalancerSecurityGroup
-      Tags:
-        - Key: Name
-          Value: quizportaldb
+  # QuizPortalDBInstance:
+  #   Type: AWS::RDS::DBInstance
+  #   Properties:
+  #     DBInstanceIdentifier: quizportaldb
+  #     AllocatedStorage: 20
+  #     DBInstanceClass: db.t3.micro
+  #     Engine: mysql
+  #     DBName: quizportaldb
+  #     MasterUsername: admin
+  #     MasterUserPassword: quizportaldb
+  #     DBSubnetGroupName: !Ref RDSPrivateSubnetGroup
+  #     PubliclyAccessible: false
+  #     VPCSecurityGroups:
+  #     - !Ref LoadBalancerSecurityGroup
+  #     Tags:
+  #       - Key: Name
+  #         Value: quizportaldb
+
+  # QuizMasterLoadBalancer:
+  #   Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+  #   DependsOn: AttachGateway
+  #   Properties:
+  #     Name: QuizMasterLoadBalancer
+  #     Scheme: internet-facing
+  #     Subnets:
+  #       - !Ref PublicQuizMasterSubnet1
+  #       - !Ref PublicQuizMasterSubnet2
+  #     SecurityGroups:
+  #       - !Ref LoadBalancerSecurityGroup
+  #     Type: application
 
   QuizMasterFrontendTargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -276,30 +289,15 @@ Resources:
       Protocol: "HTTP"
       TargetType: "ip"
 
-  QuizMasterLoadBalancer:
-    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
-    DependsOn: AttachGateway
-    Properties:
-      Name: QuizMasterLoadBalancer
-      Scheme: internet-facing
-      Subnets:
-        - !Ref PublicQuizMasterSubnet1
-        - !Ref PublicQuizMasterSubnet2
-        - !Ref ECSPrivateQuizMasterSubnet1
-        - !Ref ECSPrivateQuizMasterSubnet2
-      SecurityGroups:
-        - !Ref LoadBalancerSecurityGroup
-      Type: application
-
-  QuizMasterFrontendListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref QuizMasterFrontendTargetGroup
-      LoadBalancerArn: !Ref QuizMasterLoadBalancer
-      Port: 80
-      Protocol: HTTP
+  # QuizMasterFrontendListener:
+  #   Type: AWS::ElasticLoadBalancingV2::Listener
+  #   Properties:
+  #     DefaultActions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref QuizMasterFrontendTargetGroup
+  #     LoadBalancerArn: !Ref QuizMasterLoadBalancer
+  #     Port: 80
+  #     Protocol: HTTP
 
   QuizMasterRestAPITargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -317,104 +315,154 @@ Resources:
       Protocol: "HTTP"
       TargetType: "ip"
 
-  QuizMasterRestAPIListener:
-    Type: AWS::ElasticLoadBalancingV2::Listener
-    Properties:
-      DefaultActions:
-        - Type: forward
-          TargetGroupArn: !Ref QuizMasterRestAPITargetGroup
-      LoadBalancerArn: !Ref QuizMasterLoadBalancer
-      Port: 8080
-      Protocol: HTTP
+  # QuizMasterRestAPIListener:
+  #   Type: AWS::ElasticLoadBalancingV2::Listener
+  #   Properties:
+  #     DefaultActions:
+  #       - Type: forward
+  #         TargetGroupArn: !Ref QuizMasterRestAPITargetGroup
+  #     LoadBalancerArn: !Ref QuizMasterLoadBalancer
+  #     Port: 8080
+  #     Protocol: HTTP
 
-  QuizMasterCluster:
-    Type: AWS::ECS::Cluster
-    Properties:
-      ClusterName: QuizMasterCluster
+  # QuizMasterCluster:
+  #   Type: AWS::ECS::Cluster
+  #   Properties:
+  #     ClusterName: QuizMasterCluster
 
   FrontendTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: FrontendDeployment
-      Cpu: "2048"
-      Memory: "4096"
+      Cpu: "1024"
+      Memory: "2048"
       NetworkMode: awsvpc
-      TaskRoleArn: arn:aws:iam::851725625733:role/LabRole
-      ExecutionRoleArn: arn:aws:iam::851725625733:role/LabRole
+      TaskRoleArn: arn:aws:iam::337974834777:role/LabRole
+      ExecutionRoleArn: arn:aws:iam::337974834777:role/LabRole
       RequiresCompatibilities:
         - FARGATE
       ContainerDefinitions:
         - Name: frontend-container
-          Image: viveksonani/quiz-portal-frontend:latest
+          Image: 337974834777.dkr.ecr.us-east-1.amazonaws.com/quiz-portal-frontend:latest
           PortMappings:
             - ContainerPort: 80
               Protocol: tcp
 
-  FrontendService:
-    Type: AWS::ECS::Service
-    DependsOn:
-      - QuizMasterFrontendListener
-      - QuizPortalDBInstance
-    Properties:
-      Cluster: !Ref QuizMasterCluster
-      ServiceName: FrontendService
-      TaskDefinition: !Ref FrontendTaskDefinition
-      LaunchType: "FARGATE"
-      DesiredCount: 1
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          Subnets:
-            - !Ref ECSPrivateQuizMasterSubnet1
-            - !Ref ECSPrivateQuizMasterSubnet2
-          SecurityGroups: 
-            - !Ref LoadBalancerSecurityGroup
-          AssignPublicIp: ENABLED
-      LoadBalancers:
-        - ContainerName: frontend-container
-          ContainerPort: 80
-          TargetGroupArn: !Ref QuizMasterFrontendTargetGroup
+  # FrontendService:
+  #   Type: AWS::ECS::Service
+  #   DependsOn:
+  #     - QuizMasterFrontendListener
+  #     - QuizPortalDBInstance
+  #   Properties:
+  #     Cluster: !Ref QuizMasterCluster
+  #     ServiceName: FrontendService
+  #     TaskDefinition: !Ref FrontendTaskDefinition
+  #     LaunchType: "FARGATE"
+  #     DesiredCount: 1
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         Subnets:
+  #           - !Ref PublicQuizMasterSubnet1
+  #           - !Ref PublicQuizMasterSubnet2
+  #         SecurityGroups: 
+  #           - !Ref LoadBalancerSecurityGroup
+  #         AssignPublicIp: ENABLED
+  #     LoadBalancers:
+  #       - ContainerName: frontend-container
+  #         ContainerPort: 80
+  #         TargetGroupArn: !Ref QuizMasterFrontendTargetGroup
+
+  # FrontendServiceScalingTarget:
+  #   Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #   DependsOn:
+  #     - FrontendService
+  #   Properties:
+  #     MaxCapacity: 10
+  #     MinCapacity: 1
+  #     ResourceId: !Sub "service/${QuizMasterCluster}/FrontendService"
+  #     ScalableDimension: ecs:service:DesiredCount
+  #     ServiceNamespace: ecs
+  #     RoleARN: arn:aws:iam::337974834777:role/LabRole
+
+  # FrontendServiceScalingPolicy:
+  #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #   Properties:
+  #     PolicyName: FrontendServiceScalingPolicy
+  #     PolicyType: TargetTrackingScaling
+  #     ScalingTargetId: !Ref FrontendServiceScalingTarget
+  #     TargetTrackingScalingPolicyConfiguration:
+  #       TargetValue: 50.0
+  #       PredefinedMetricSpecification:
+  #         PredefinedMetricType: ECSServiceAverageCPUUtilization
+  #       ScaleInCooldown: 60
+  #       ScaleOutCooldown: 60
 
   RestAPITaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       Family: RestAPIDeployment
-      Cpu: "2048"
-      Memory: "4096"
+      Cpu: "1024"
+      Memory: "2048"
       NetworkMode: awsvpc
-      TaskRoleArn: arn:aws:iam::851725625733:role/LabRole
-      ExecutionRoleArn: arn:aws:iam::851725625733:role/LabRole
+      TaskRoleArn: arn:aws:iam::337974834777:role/LabRole
+      ExecutionRoleArn: arn:aws:iam::337974834777:role/LabRole
       RequiresCompatibilities:
         - FARGATE
       ContainerDefinitions:
         - Name: rest-api-container
-          Image: viveksonani/quiz-portal-rest-api:latest
+          Image: 337974834777.dkr.ecr.us-east-1.amazonaws.com/quiz-portal-rest-api:latest
           PortMappings:
             - ContainerPort: 8080
               Protocol: tcp
 
-  RestAPIService:
-    Type: AWS::ECS::Service
-    DependsOn:
-      - QuizMasterRestAPIListener
-      - QuizPortalDBInstance
-    Properties:
-      Cluster: !Ref QuizMasterCluster
-      ServiceName: RestAPIService
-      TaskDefinition: !Ref RestAPITaskDefinition
-      LaunchType: "FARGATE"
-      DesiredCount: 1
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          Subnets:
-            - !Ref ECSPrivateQuizMasterSubnet1
-            - !Ref ECSPrivateQuizMasterSubnet2
-          SecurityGroups: 
-            - !Ref LoadBalancerSecurityGroup
-          AssignPublicIp: ENABLED
-      LoadBalancers:
-        - ContainerName: rest-api-container
-          ContainerPort: 8080
-          TargetGroupArn: !Ref QuizMasterRestAPITargetGroup
+  # RestAPIService:
+  #   Type: AWS::ECS::Service
+  #   DependsOn:
+  #     - QuizMasterRestAPIListener
+  #     - QuizPortalDBInstance
+  #   Properties:
+  #     Cluster: !Ref QuizMasterCluster
+  #     ServiceName: RestAPIService
+  #     TaskDefinition: !Ref RestAPITaskDefinition
+  #     LaunchType: "FARGATE"
+  #     DesiredCount: 1
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         Subnets:
+  #           - !Ref PublicQuizMasterSubnet1
+  #           - !Ref PublicQuizMasterSubnet2
+  #         SecurityGroups:
+  #           - !Ref LoadBalancerSecurityGroup
+  #         AssignPublicIp: ENABLED
+  #     LoadBalancers:
+  #       - ContainerName: rest-api-container
+  #         ContainerPort: 8080
+  #         TargetGroupArn: !Ref QuizMasterRestAPITargetGroup
+
+  # RestAPIServiceScalingTarget:
+  #   Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #   DependsOn:
+  #     - RestAPIService
+  #   Properties:
+  #     MaxCapacity: 10
+  #     MinCapacity: 1
+  #     ResourceId: !Sub "service/${QuizMasterCluster}/RestAPIService"
+  #     ScalableDimension: ecs:service:DesiredCount
+  #     ServiceNamespace: ecs
+  #     RoleARN: arn:aws:iam::337974834777:role/LabRole
+
+  # RestAPIServiceScalingPolicy:
+  #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #   Properties:
+  #     PolicyName: RestAPIServiceScalingPolicy
+  #     PolicyType: TargetTrackingScaling
+  #     ScalingTargetId: !Ref RestAPIServiceScalingTarget
+  #     TargetTrackingScalingPolicyConfiguration:
+  #       TargetValue: 50.0
+  #       PredefinedMetricSpecification:
+  #         PredefinedMetricType: ECSServiceAverageCPUUtilization
+  #       ScaleInCooldown: 60
+  #       ScaleOutCooldown: 60
 
   ConsumerTaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -423,55 +471,114 @@ Resources:
       Cpu: "2048"
       Memory: "4096"
       NetworkMode: awsvpc
-      TaskRoleArn: arn:aws:iam::851725625733:role/LabRole
-      ExecutionRoleArn: arn:aws:iam::851725625733:role/LabRole
+      TaskRoleArn: arn:aws:iam::337974834777:role/LabRole
+      ExecutionRoleArn: arn:aws:iam::337974834777:role/LabRole
       RequiresCompatibilities:
         - FARGATE
       ContainerDefinitions:
         - Name: consumer-container
-          Image: viveksonani/quiz-portal-consumer:latest
+          Image: 337974834777.dkr.ecr.us-east-1.amazonaws.com/quiz-portal-consumer:latest
           PortMappings:
             - ContainerPort: 80
               Protocol: tcp
 
-  ConsumerService:
-    Type: AWS::ECS::Service
-    DependsOn:
-     - QuizPortalDBInstance
-    Properties:
-      Cluster: !Ref QuizMasterCluster
-      ServiceName: ConsumerService
-      TaskDefinition: !Ref ConsumerTaskDefinition
-      LaunchType: "FARGATE"
-      DesiredCount: 1
-      NetworkConfiguration:
-        AwsvpcConfiguration:
-          Subnets:
-            - !Ref ECSPrivateQuizMasterSubnet1
-            - !Ref ECSPrivateQuizMasterSubnet2
+  # ConsumerService:
+  #   Type: AWS::ECS::Service
+  #   DependsOn:
+  #    - QuizPortalDBInstance
+  #   Properties:
+  #     Cluster: !Ref QuizMasterCluster
+  #     ServiceName: ConsumerService
+  #     TaskDefinition: !Ref ConsumerTaskDefinition
+  #     LaunchType: "FARGATE"
+  #     DesiredCount: 1
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         Subnets:
+  #           - !Ref ECSPrivateQuizMasterSubnet1
+  #           - !Ref ECSPrivateQuizMasterSubnet2
 
-  TranscribeEC2Instance:
-    Type: AWS::EC2::Instance
-    DependsOn:
-      - TranscribeRequestQueue
-      - TranscribeResponseQueue
+  # ConsumerServiceScalingTarget:
+  #   Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #   DependsOn:
+  #     - ConsumerService
+  #   Properties:
+  #     MaxCapacity: 10
+  #     MinCapacity: 1
+  #     ResourceId: !Sub "service/${QuizMasterCluster}/ConsumerService"
+  #     ScalableDimension: ecs:service:DesiredCount
+  #     ServiceNamespace: ecs
+  #     RoleARN: arn:aws:iam::337974834777:role/LabRole
+
+  # ConsumerServiceScalingPolicy:
+  #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #   Properties:
+  #     PolicyName: ConsumerServiceScalingPolicy
+  #     PolicyType: TargetTrackingScaling
+  #     ScalingTargetId: !Ref ConsumerServiceScalingTarget
+  #     TargetTrackingScalingPolicyConfiguration:
+  #       TargetValue: 50.0
+  #       PredefinedMetricSpecification:
+  #         PredefinedMetricType: ECSServiceAverageCPUUtilization
+  #       ScaleInCooldown: 60
+  #       ScaleOutCooldown: 60
+
+  TranscribeTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
     Properties:
-      InstanceType: t2.micro
-      ImageId: ami-051f8a213df8bc089
-      SubnetId: !Ref ECSPrivateQuizMasterSubnet1
-      KeyName: transcribe-ec2-key
-      SecurityGroupIds:
-        - !Ref LoadBalancerSecurityGroup
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          sudo yum update -y
-          sudo yum install -y docker
-          sudo systemctl start docker
-          sudo systemctl enable docker
-          sudo usermod -a -G docker $(whoami)
-          sudo docker pull viveksonani/quiz-portal-transcribe:latest
-          sudo docker run -d viveksonani/quiz-portal-transcribe
-      Tags:
-        - Key: Name
-          Value: transcribe-ec2-instance
+      Family: TranscribeDeployment
+      Cpu: "2048"
+      Memory: "4096"
+      NetworkMode: awsvpc
+      TaskRoleArn: arn:aws:iam::337974834777:role/LabRole
+      ExecutionRoleArn: arn:aws:iam::337974834777:role/LabRole
+      RequiresCompatibilities:
+        - FARGATE
+      ContainerDefinitions:
+        - Name: transcribe-container
+          Image: 337974834777.dkr.ecr.us-east-1.amazonaws.com/quiz-portal-transcribe:latest
+          PortMappings:
+            - ContainerPort: 80
+              Protocol: tcp
+
+  # TranscribeService:
+  #   Type: AWS::ECS::Service
+  #   DependsOn:
+  #     - TranscribeRequestQueue
+  #     - TranscribeResponseQueue
+  #   Properties:
+  #     Cluster: !Ref QuizMasterCluster
+  #     ServiceName: TranscribeService
+  #     TaskDefinition: !Ref TranscribeTaskDefinition
+  #     LaunchType: "FARGATE"
+  #     DesiredCount: 1
+  #     NetworkConfiguration:
+  #       AwsvpcConfiguration:
+  #         Subnets:
+  #           - !Ref ECSPrivateQuizMasterSubnet1
+  #           - !Ref ECSPrivateQuizMasterSubnet2
+
+  # TranscribeServiceScalingTarget:
+  #   Type: AWS::ApplicationAutoScaling::ScalableTarget
+  #   DependsOn:
+  #     - TranscribeService
+  #   Properties:
+  #     MaxCapacity: 10
+  #     MinCapacity: 1
+  #     ResourceId: !Sub "service/${QuizMasterCluster}/TranscribeService"
+  #     ScalableDimension: ecs:service:DesiredCount
+  #     ServiceNamespace: ecs
+  #     RoleARN: arn:aws:iam::337974834777:role/LabRole
+
+  # TranscribeServiceScalingPolicy:
+  #   Type: AWS::ApplicationAutoScaling::ScalingPolicy
+  #   Properties:
+  #     PolicyName: TranscribeServiceScalingPolicy
+  #     PolicyType: TargetTrackingScaling
+  #     ScalingTargetId: !Ref TranscribeServiceScalingTarget
+  #     TargetTrackingScalingPolicyConfiguration:
+  #       TargetValue: 50.0
+  #       PredefinedMetricSpecification:
+  #         PredefinedMetricType: ECSServiceAverageCPUUtilization
+  #       ScaleInCooldown: 60
+  #       ScaleOutCooldown: 60
