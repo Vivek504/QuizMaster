@@ -19,24 +19,10 @@
 5.	Score Viewing:
     - Students can view their scores achieved in quizzes.
 
-## Architecture
-
-![alt text](Architecture.png)
-
-## AWS Cloud Services
-
-- AWS CloudFormation
-- Elastic Container Service (ECS)
-- Relational Database Service (RDS)
-- S3
-- Virtual Private Cloud (VPC)
-- Elastic Load Balancing (ELB)
-- Simple Queue Service (SQS)
-- Amazon Rekognition
-
 ## Languages/Frameworks/Technologies
 
 - .NET Core (C#)
 - React.js
 - Python
 - ChatGPT-3.5 API
+- AWS
