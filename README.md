@@ -19,6 +19,10 @@
 5.	Score Viewing:
     - Students can view their scores achieved in quizzes.
 
+## Architecture
+
+![Architecture Diagram](Architecture.png)
+
 ## Languages/Frameworks/Technologies
 
 - .NET Core (C#)
@@ -26,3 +30,14 @@
 - Python
 - ChatGPT-3.5 API
 - AWS
+
+## AWS Cloud Services
+
+- AWS CloudFormation
+- Elastic Container Service (ECS)
+- Relational Database Service (RDS)
+- S3
+- Virtual Private Cloud (VPC)
+- Elastic Load Balancing (ELB)
+- Simple Queue Service (SQS)
+- Amazon Rekognition
